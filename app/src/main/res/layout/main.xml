@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/idExportContactsAndSMS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:onClick="onExportContactsAndSMS"
+        android:text="Export Contacts and SMS" />
+
+    <Button
+        android:id="@+id/idImportContacts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:onClick="onImportContacts"
+        android:text="Import Contacts" />
+
+</android.widget.LinearLayout>
