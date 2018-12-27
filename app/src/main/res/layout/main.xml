@@ -13,11 +13,11 @@
         android:text="Export Contacts and SMS" />
 
     <Button
-        android:id="@+id/idImportContacts"
+        android:id="@+id/idImportContactsAndSMS"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:onClick="onImportContacts"
-        android:text="Import Contacts" />
+        android:onClick="onImportContactsAndSMS"
+        android:text="Import Contacts and SMS" />
 
 </android.widget.LinearLayout>

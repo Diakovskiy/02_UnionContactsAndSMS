@@ -214,6 +214,13 @@ public class PhoneBookUtil {
             ArrayList<SimpleContactData> phoneNumbersFromFile = new ArrayList<>();
             String filename                           = Environment.getExternalStorageDirectory()+ "/"+ "MY_ContactsDB0" + ".csv";
 
+            File fileToRead = new File(filename);
+            if (!fileToRead.exists()){
+                report = "file " + filename +" not exist";
+                Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
+                return;
+            }
+
             CSVReader reader                          = new CSVReader(new FileReader(filename));
             String[] csvLine;
             while ((csvLine = reader.readNext())     != null) {
