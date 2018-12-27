@@ -204,11 +204,9 @@ public class SMSUtil {
             Log.d(TAG, report);
             Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
 
-        }catch (IOException e){
-            e.printStackTrace();
-
         }catch (Exception e) {
             e.printStackTrace();
+            UIUtil.showMessage(activity,"Exception", e.toString());
 
         }
     }

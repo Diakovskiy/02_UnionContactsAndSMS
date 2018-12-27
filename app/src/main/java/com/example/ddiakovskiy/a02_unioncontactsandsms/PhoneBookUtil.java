@@ -204,41 +204,36 @@ public class PhoneBookUtil {
         activity.getContentResolver().applyBatch(ContactsContract.AUTHORITY, op);
     }
 
-    static void ImportPhoneNumbersFromFile(Activity activity){
-
-        String report = null;
+    static void ImportPhoneNumbersFromFile(Activity activity, int ErrorStatus, String report){
 
         try {
 
             //*** 1) read contacts from file ---------------------------------------------------------------------------------------------------------------------------------------
             ArrayList<SimpleContactData> phoneNumbersFromFile = new ArrayList<>();
-            String filename                           = Environment.getExternalStorageDirectory()+ "/"+ "MY_ContactsDB0" + ".csv";
+            String filename                           = FileUtil.getPhoneNumbersImportFileName();
 
             File fileToRead = new File(filename);
             if (!fileToRead.exists()){
-                report = "file " + filename +" not exist";
-                Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
+                report      = report + "\n"+ "file " + filename +" does not exist";
+                ErrorStatus = ErrorStatus + 1;
                 return;
             }
 
             CSVReader reader                          = new CSVReader(new FileReader(filename));
             String[] csvLine;
             while ((csvLine = reader.readNext())     != null) {
-
                 SimpleContactData inp                 = new SimpleContactData(csvLine[0], csvLine[1]);
-                Log.d(TAG, "have read " +inp.getTelName() +";" + inp.getTelNumber());
                 phoneNumbersFromFile.add(inp);
             }
 
 
             if (phoneNumbersFromFile.size() == 0){
-                report = "We have found NO records on file " + filename +" exiting";
-                Log.d(TAG, report);
-                Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
+                report      = report + "\n"+ "have found NO records on file " + filename;
+                ErrorStatus = ErrorStatus + 1;
                 return;
 
             } else {
-                Log.d(TAG, "sucessfully read "+phoneNumbersFromFile.size()+" contacts from file "+filename);
+                Log.d(TAG, "sucessfully read " + phoneNumbersFromFile.size() + " contacts from file " + filename);
             }
 
             //*** 2) read contacts from phonebook ----------------------------------------------------------------------------------------------------------------------------------
@@ -247,11 +242,8 @@ public class PhoneBookUtil {
 
 
             //*** 3) contacts from phone left join contacts from file  --------------------------------------------------------------------------------------------------------------
-            //
-
             int recordsImported = 0;
             for(SimpleContactData phoneNumberToAdd: phoneNumbersFromFile){
-
 
                 // check if really new
                 boolean phoneNumberIsReallyNew = true;
@@ -263,24 +255,21 @@ public class PhoneBookUtil {
                 }
 
                 if (phoneNumberIsReallyNew){
-                    Log.d(TAG, "importing "+phoneNumberToAdd.getTelName() + " " + phoneNumberToAdd.getTelNumber());
+                    Log.d(TAG, "creating "+phoneNumberToAdd.getTelName() + " " + phoneNumberToAdd.getTelNumber());
                     CreateNewRecordInPhone(activity, phoneNumberToAdd);
                     recordsImported++;
                 }
             }
 
-            report = "Sucessfully imported " + recordsImported + " from file " + filename;
-            Log.d(TAG, report);
-            Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
-
-        }catch (IOException e){
-            e.printStackTrace();
+            report   = report + "\n" + "Sucessfully imported " + recordsImported + " from file " + filename +" with " + phoneNumbersFromFile.size();
 
         }catch (Exception e) {
             e.printStackTrace();
-
+            String exceptionMessage = e.getMessage();
+            UIUtil.showMessage(activity,"Exception", exceptionMessage);
+            report      = report + "\n" + exceptionMessage;
+            ErrorStatus = ErrorStatus + 1;
         }
-
 
     }
 

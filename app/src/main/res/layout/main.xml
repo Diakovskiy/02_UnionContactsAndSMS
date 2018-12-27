@@ -20,4 +20,12 @@
         android:onClick="onImportContactsAndSMS"
         android:text="Import Contacts and SMS" />
 
+    <Button
+        android:id="@+id/idInstallAsSMSApp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:onClick="onInstallAsSMSApp"
+        android:text="Install as SMS App" />
+
 </android.widget.LinearLayout>

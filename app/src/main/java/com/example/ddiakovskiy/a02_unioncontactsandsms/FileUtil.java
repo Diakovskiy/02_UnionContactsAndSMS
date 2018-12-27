@@ -9,4 +9,12 @@ public class FileUtil {
         return Environment.getExternalStorageDirectory()+ "/MY_SMSDB0.csv";
     }
 
+    public static String getPhoneNumbersImportFileName(){
+
+        return Environment.getExternalStorageDirectory()+ "/MY_ContactsDB0.csv";
+
+    }
+
+
+
 }
