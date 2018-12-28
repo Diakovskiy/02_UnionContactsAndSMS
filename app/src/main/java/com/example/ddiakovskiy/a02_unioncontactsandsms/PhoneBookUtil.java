@@ -108,7 +108,7 @@ public class PhoneBookUtil {
         }
     }
 
-    static void ExportPhoneNumbersToFile(Activity activity){
+    static String ExportPhoneNumbersToFile(Activity activity){
 
         ArrayList<SimpleContactData> phoneNumbers = new ArrayList<>();
 
@@ -204,73 +204,68 @@ public class PhoneBookUtil {
         activity.getContentResolver().applyBatch(ContactsContract.AUTHORITY, op);
     }
 
-    static void ImportPhoneNumbersFromFile(Activity activity, int ErrorStatus, String report){
+    static String ImportPhoneNumbersFromFile(Activity activity, Integer ErrorStatus) throws Exception {
 
-        try {
+        String report = "";
 
-            //*** 1) read contacts from file ---------------------------------------------------------------------------------------------------------------------------------------
-            ArrayList<SimpleContactData> phoneNumbersFromFile = new ArrayList<>();
-            String filename                           = FileUtil.getPhoneNumbersImportFileName();
+        int recordsInFile         = 0;
+        int recordsImported       = 0;
+        String[] csvLine          = null;
 
-            File fileToRead = new File(filename);
-            if (!fileToRead.exists()){
-                report      = report + "\n"+ "file " + filename +" does not exist";
-                ErrorStatus = ErrorStatus + 1;
-                return;
-            }
+        //*** 1) read contacts from file ---------------------------------------------------------------------------------------------------------------------------------------
+        ArrayList<SimpleContactData> phoneNumbersFromFile = new ArrayList<>();
+        String filename                                   = FileUtil.getPhoneNumbersImportFileName();
 
-            CSVReader reader                          = new CSVReader(new FileReader(filename));
-            String[] csvLine;
-            while ((csvLine = reader.readNext())     != null) {
-                SimpleContactData inp                 = new SimpleContactData(csvLine[0], csvLine[1]);
-                phoneNumbersFromFile.add(inp);
-            }
-
-
-            if (phoneNumbersFromFile.size() == 0){
-                report      = report + "\n"+ "have found NO records on file " + filename;
-                ErrorStatus = ErrorStatus + 1;
-                return;
-
-            } else {
-                Log.d(TAG, "sucessfully read " + phoneNumbersFromFile.size() + " contacts from file " + filename);
-            }
-
-            //*** 2) read contacts from phonebook ----------------------------------------------------------------------------------------------------------------------------------
-            ArrayList<SimpleContactData> currentPhonebook = new ArrayList<>();
-            ReadContactsFromPhone(activity, currentPhonebook);
-
-
-            //*** 3) contacts from phone left join contacts from file  --------------------------------------------------------------------------------------------------------------
-            int recordsImported = 0;
-            for(SimpleContactData phoneNumberToAdd: phoneNumbersFromFile){
-
-                // check if really new
-                boolean phoneNumberIsReallyNew = true;
-                for (SimpleContactData phoneNumberInPhoneBook: currentPhonebook){
-                    if (phoneNumberToAdd.getTelNumber().equals(phoneNumberInPhoneBook.getTelNumber())){
-                        phoneNumberIsReallyNew = false;
-                        break;
-                    }
-                }
-
-                if (phoneNumberIsReallyNew){
-                    Log.d(TAG, "creating "+phoneNumberToAdd.getTelName() + " " + phoneNumberToAdd.getTelNumber());
-                    CreateNewRecordInPhone(activity, phoneNumberToAdd);
-                    recordsImported++;
-                }
-            }
-
-            report   = report + "\n" + "Sucessfully imported " + recordsImported + " from file " + filename +" with " + phoneNumbersFromFile.size();
-
-        }catch (Exception e) {
-            e.printStackTrace();
-            String exceptionMessage = e.getMessage();
-            UIUtil.showMessage(activity,"Exception", exceptionMessage);
-            report      = report + "\n" + exceptionMessage;
+        File fileToRead                                   = new File(filename);
+        if (!fileToRead.exists()){
+            report      = "-- file " + filename +" not exist --";
             ErrorStatus = ErrorStatus + 1;
+            return report;
         }
 
+        CSVReader reader                          = new CSVReader(new FileReader(filename));
+        while ((csvLine = reader.readNext())     != null) {
+            SimpleContactData inp                 = new SimpleContactData(csvLine[0], csvLine[1]);
+            phoneNumbersFromFile.add(inp);
+        }
+        recordsInFile = phoneNumbersFromFile.size();
+
+        if (recordsInFile == 0){
+           report      = "-- have found NO records on file " + filename + "--";
+           ErrorStatus = ErrorStatus + 1;
+           return report;
+
+        } else {
+           Log.d(TAG, "sucessfully read " + recordsInFile + " contacts from file " + filename);
+        }
+
+        //*** 2) read contacts from phonebook ----------------------------------------------------------------------------------------------------------------------------------
+        ArrayList<SimpleContactData> currentPhonebook = new ArrayList<>();
+        ReadContactsFromPhone(activity, currentPhonebook);
+
+
+        //*** 3) contacts from phone left join contacts from file  --------------------------------------------------------------------------------------------------------------
+
+        for(SimpleContactData phoneNumberToAdd: phoneNumbersFromFile) {
+
+            // check if really new
+            boolean phoneNumberIsReallyNew = true;
+            for (SimpleContactData phoneNumberInPhoneBook : currentPhonebook) {
+                if (phoneNumberToAdd.getTelNumber().equals(phoneNumberInPhoneBook.getTelNumber())) {
+                    phoneNumberIsReallyNew = false;
+                    break;
+                }
+            }
+
+            if (phoneNumberIsReallyNew) {
+                Log.d(TAG, "creating " + phoneNumberToAdd.getTelName() + " " + phoneNumberToAdd.getTelNumber());
+                CreateNewRecordInPhone(activity, phoneNumberToAdd);
+                recordsImported++;
+            }
+        }
+
+        report   = "" + recordsImported + " of " + recordsInFile + " contacts imported";
+        return report;
     }
 
 }

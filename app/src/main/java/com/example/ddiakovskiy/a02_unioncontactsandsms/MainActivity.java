@@ -78,24 +78,39 @@ public class MainActivity extends Activity {
 
     public void reallyExportContactsAndSMS(){
 
-        PhoneBookUtil.ExportPhoneNumbersToFile(this);
-        SMSUtil.ExportSMSToFile(this);
+        try {
+
+            String  exportNumberReport     = PhoneBookUtil.ExportPhoneNumbersToFile(this);
+            //String  exportSmsReport        = SMSUtil.ExportSMSToFile(this);
+            String  exportSmsReport = "SMS exporting";
+
+            UIUtil.showOKResult(this, ""+ exportNumberReport + "\n" + exportSmsReport);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            String exceptionMessage        = e.getMessage();
+            UIUtil.showMessage(this,"Exception", exceptionMessage);
+        }
+
     }
 
     public void reallyImportContactsAndSMS(){
 
-        int ErrorStatus      = 0;
-        String statusMessage = "";
+        Integer errorStatus                = 0;
 
-        PhoneBookUtil.ImportPhoneNumbersFromFile(this, ErrorStatus, statusMessage);
-        SMSUtil.ImportSMSFromFile(this);
+        try {
 
-        if (ErrorStatus == 0) {
-            UIUtil.showOKResult(this, statusMessage);
-        } else {
-            UIUtil.showFatalError(this, statusMessage);
+            String  importNumberReport     = PhoneBookUtil.ImportPhoneNumbersFromFile(this, errorStatus);
+            String  importSmsReport        = SMSUtil.ImportSMSFromFile(this, errorStatus);
+
+            UIUtil.showOKResult(this, ""+ importNumberReport + "\n" + importSmsReport);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            String exceptionMessage     = e.getMessage();
+            UIUtil.showMessage(this,"Exception", exceptionMessage);
+
         }
-
 
     }
 

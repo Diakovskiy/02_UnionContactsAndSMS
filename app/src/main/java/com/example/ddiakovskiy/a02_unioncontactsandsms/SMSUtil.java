@@ -20,6 +20,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -146,69 +147,70 @@ public class SMSUtil {
 
     }
 
-    public static void ImportSMSFromFile(Activity activity){
+    public static String ImportSMSFromFile(Activity activity, Integer ErrorStatus) throws Exception {
 
-        String report                    = null;
+        String report = "";
+
         String[] csvLine;
         ArrayList<SimpleSMSData> smsFromFile = new ArrayList<>();
 
-        try {
+        //*** 1) read SMS from file ---------------------------------------------------------------------------------------------------------------------------------------
+        String filename                           = FileUtil.getSMSImportFileName();
 
-            //*** 1) read SMS from file ---------------------------------------------------------------------------------------------------------------------------------------
-            String filename                           = FileUtil.getSMSImportFileName();
-
-            CSVReader reader                          = new CSVReader(new FileReader(filename));
-            while ((csvLine = reader.readNext())     != null) {
-
-                SimpleSMSData smsToAdd = new SimpleSMSData();
-                smsToAdd.setFromCsvLine(csvLine);
-                smsFromFile.add(smsToAdd);
-            }
-
-
-            if (smsFromFile.size() == 0){
-                report = "We have found NO records on file " + filename +" exiting";
-                Log.d(TAG, report);
-                Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
-                return;
-
-            } else {
-                Log.d(TAG, "sucessfully read "+smsFromFile.size()+" SMS from file "+filename);
-            }
-
-            //*** 2) read SMS from phone ----------------------------------------------------------------------------------------------------------------------------------
-            ArrayList<SimpleSMSData> smsFromPhone = SMSUtil.readFromPhone(activity);
-
-            //*** 3) SMS from phone left join SMS from file  --------------------------------------------------------------------------------------------------------------
-            int recordsImported = 0;
-            for(SimpleSMSData smsToAdd: smsFromFile){
-
-
-                // check if really new
-                boolean smsIsReallyNew = true;
-                for (SimpleSMSData smsInPhone: smsFromPhone) {
-                    if (smsToAdd.equals(smsInPhone)) {
-                        smsIsReallyNew = false;
-                        break;
-                    }
-                }
-
-                if (smsIsReallyNew){
-                    Log.d(TAG, "importing " + smsToAdd.toString());
-                    CreateNewSMSRecordInPhone(activity, smsToAdd);
-                    recordsImported++;
-                }
-            }
-
-            report = "Sucessfully imported " + recordsImported + " from file " + filename;
-            Log.d(TAG, report);
-            Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
-
-        }catch (Exception e) {
-            e.printStackTrace();
-            UIUtil.showMessage(activity,"Exception", e.toString());
-
+        File fileToRead                                   = new File(filename);
+        if (!fileToRead.exists()){
+            report      = "-- file " + filename +" not exist --";
+            ErrorStatus = ErrorStatus + 1;
+            return report;
         }
+
+        CSVReader reader                          = new CSVReader(new FileReader(filename));
+        while ((csvLine = reader.readNext())     != null) {
+
+           SimpleSMSData smsToAdd = new SimpleSMSData();
+           smsToAdd.setFromCsvLine(csvLine);
+           smsFromFile.add(smsToAdd);
+        }
+
+        int smsRecordFromFile = smsFromFile.size();
+
+        if (smsRecordFromFile == 0){
+            report = "We have found NO records on file " + filename +" exiting";
+            Log.d(TAG, report);
+            return report;
+
+        } else {
+            Log.d(TAG, "sucessfully read " + smsRecordFromFile + " SMS from file " + filename);
+        }
+
+        //*** 2) read SMS from phone ----------------------------------------------------------------------------------------------------------------------------------
+        ArrayList<SimpleSMSData> smsFromPhone = SMSUtil.readFromPhone(activity);
+
+        //*** 3) SMS from phone left join SMS from file  --------------------------------------------------------------------------------------------------------------
+        int recordsImported = 0;
+        for(SimpleSMSData smsToAdd: smsFromFile){
+
+
+           // check if really new
+           boolean smsIsReallyNew = true;
+           for (SimpleSMSData smsInPhone: smsFromPhone) {
+               if (smsToAdd.equals(smsInPhone)) {
+                  smsIsReallyNew = false;
+                  break;
+               }
+           }
+
+           if (smsIsReallyNew){
+               Log.d(TAG, "importing " + smsToAdd.toString());
+               CreateNewSMSRecordInPhone(activity, smsToAdd);
+               recordsImported++;
+           }
+        }
+
+        report = ""+ recordsImported + " of " + smsRecordFromFile + " sms imported";
+        Log.d(TAG, report);
+        return report;
+
     }
 
 
