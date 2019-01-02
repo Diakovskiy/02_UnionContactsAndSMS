@@ -108,13 +108,15 @@ public class PhoneBookUtil {
         }
     }
 
-    static String ExportPhoneNumbersToFile(Activity activity){
+    static String ExportPhoneNumbersToFile(Activity activity) throws IOException {
+
+
 
         ArrayList<SimpleContactData> phoneNumbers = new ArrayList<>();
-
         ReadContactsFromPhone(activity, phoneNumbers);
+        String result = SaveContactsToFile(activity, phoneNumbers, "MY_ContactsDB");
 
-        SaveContactsToFile(activity, phoneNumbers, "MY_ContactsDB");
+        return result;
 
     }
 
@@ -136,43 +138,33 @@ public class PhoneBookUtil {
 
     }
 
-    static void SaveContactsToFile(Activity activity, ArrayList<SimpleContactData> phoneNumbers, String filename) {
+    static String SaveContactsToFile(Activity activity, ArrayList<SimpleContactData> phoneNumbers, String filename) throws IOException {
 
+        String report          = "";
         String csvExportFolder = Environment.getExternalStorageDirectory()+ "/";
-        String csvFileName = null;
-        File csvFile       = null;
-        int fileCount = 1;
+        String csvFileName     = null;
+        File csvFile           = null;
+        int fileCount          = 1;
 
         do {
-            csvFileName = csvExportFolder + filename + fileCount + ".csv";
-            csvFile = new File(csvFileName);
-            fileCount = fileCount + 1;
+            csvFileName        = csvExportFolder + filename + fileCount + ".csv";
+            csvFile            = new File(csvFileName);
+            fileCount          = fileCount + 1;
         } while (csvFile.exists());
 
-        try {
+        CSVWriter csvWriter = new CSVWriter(new FileWriter(csvFileName));
+        for(SimpleContactData phoneNumber: phoneNumbers){
 
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(csvFileName));
-            for(SimpleContactData phoneNumber: phoneNumbers){
-
-                String []stringLine = new String[2];
-
-                stringLine[0] = phoneNumber.getTelName();
-                stringLine[1]=  phoneNumber.getTelNumber();
-
-                csvWriter.writeNext(stringLine);
-            }
-
-            csvWriter.close();
-
-            String report = "Sucessfully exported " + phoneNumbers.size()+" entries to file " + csvFileName;
-            Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
-            Log.d(TAG, "saveToFile: "+report);
-
-        }catch (IOException exp){
-            exp.printStackTrace();
+            String []stringLine = new String[2];
+            stringLine[0]       = phoneNumber.getTelName();
+            stringLine[1]       = phoneNumber.getTelNumber();
+            csvWriter.writeNext(stringLine);
         }
+        csvWriter.close();
 
-
+        report = "exp "+ phoneNumbers.size()+" contacts to " + csvFileName;
+        Log.d(TAG, report);
+        return report;
     }
 
 

@@ -113,7 +113,9 @@ public class SMSUtil {
         return result;
     }
 
-    public static void ExportSMSToFile(Activity activity){
+    public static String ExportSMSToFile(Activity activity) throws IOException {
+
+        String report          = "";
 
         String csvExportFolder = Environment.getExternalStorageDirectory()+ "/";
         String csvFileName     = null;
@@ -126,25 +128,17 @@ public class SMSUtil {
             fileCount          = fileCount + 1;
         } while (csvFile.exists());
 
-        try {
+                CSVWriter csvWriter = new CSVWriter(new FileWriter(csvFileName));
 
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(csvFileName));
+                ArrayList<SimpleSMSData> smsInPhone = SMSUtil.readFromPhone(activity);
+                for(SimpleSMSData mySMS: smsInPhone){
+                    csvWriter.writeNext(mySMS.getStringLine());
+                }
+                csvWriter.close();
 
-            ArrayList<SimpleSMSData> smsInPhone = SMSUtil.readFromPhone(activity);
-            for(SimpleSMSData mySMS: smsInPhone){
-                csvWriter.writeNext(mySMS.getStringLine());
-            }
-            csvWriter.close();
-
-            String report = "Sucessfully exported " + smsInPhone.size()+" entries to file " + csvFileName;
-            Toast.makeText(activity, report, Toast.LENGTH_LONG).show();
-            Log.d(TAG, "saveToFile: "+report);
-
-        }catch (IOException exp){
-            exp.printStackTrace();
-        }
-
-
+                report = "exp "+ smsInPhone.size()+" SMS to " + csvFileName;
+                Log.d(TAG, report);
+                return report;
     }
 
     public static String ImportSMSFromFile(Activity activity, Integer ErrorStatus) throws Exception {
@@ -155,7 +149,7 @@ public class SMSUtil {
         ArrayList<SimpleSMSData> smsFromFile = new ArrayList<>();
 
         //*** 1) read SMS from file ---------------------------------------------------------------------------------------------------------------------------------------
-        String filename                           = FileUtil.getSMSImportFileName();
+        String filename                                   = FileUtil.getSMSImportFileName();
 
         File fileToRead                                   = new File(filename);
         if (!fileToRead.exists()){
@@ -207,8 +201,23 @@ public class SMSUtil {
            }
         }
 
+
+        //4 check, if it is really written to phone - because if it is not default SMS APP, Android says than all ok, but really do nothing
+        if (recordsImported > 0){
+            ArrayList<SimpleSMSData> smsFromPhoneAfterImport = SMSUtil.readFromPhone(activity);
+            if (smsFromPhoneAfterImport.size() == smsFromPhone.size()){
+                //what???
+                report = "we have a problem - need to setup SMS default app trying to: "+ recordsImported + " of " + smsRecordFromFile + " sms NOT imported";
+                Log.d(TAG, report);
+                return report;
+            }
+        }
+
         report = ""+ recordsImported + " of " + smsRecordFromFile + " sms imported";
         Log.d(TAG, report);
+
+
+
         return report;
 
     }
@@ -240,7 +249,8 @@ public class SMSUtil {
             }
         }
 
-        activity.getContentResolver().insert(smsFolderUri, cv);
+        Uri createSMSresult = activity.getContentResolver().insert(smsFolderUri, cv);
+        Log.d(TAG, "CreateNewSMSRecordInPhone: " + createSMSresult);
 
     }
 
@@ -274,22 +284,6 @@ public class SMSUtil {
 
         String folderName = "inbox";
 
-
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            Uri uri = Telephony.Sms.Sent.CONTENT_URI;
-//            if(folderName.equals("inbox")){
-//                uri = Telephony.Sms.Inbox.CONTENT_URI;
-//            }
-//            activity.getContentResolver().insert(uri, values);
-//        }
-//        else {
-//            activity.getContentResolver().insert(Uri.parse("content://sms/" + folderName), values);
-//        }
-
-
-
-
-
         for(SimpleSMSData mySMS: smsFromFile){
 
             //listSmsFromPhone.add(smsFromFile);
@@ -303,9 +297,5 @@ public class SMSUtil {
 
             Log.d(TAG, "inserting SMS:"+ mySMS.toString());
         }
-
-
-        //
-
     }
 }

@@ -81,10 +81,9 @@ public class MainActivity extends Activity {
         try {
 
             String  exportNumberReport     = PhoneBookUtil.ExportPhoneNumbersToFile(this);
-            //String  exportSmsReport        = SMSUtil.ExportSMSToFile(this);
-            String  exportSmsReport = "SMS exporting";
+            String  exportSmsReport        = SMSUtil.ExportSMSToFile(this);
 
-            UIUtil.showOKResult(this, ""+ exportNumberReport + "\n" + exportSmsReport);
+            UIUtil.showOKResult(this, ""+ exportNumberReport + "\n" +"--------------------------------------------------------------"+ "\n" + exportSmsReport);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -103,7 +102,7 @@ public class MainActivity extends Activity {
             String  importNumberReport     = PhoneBookUtil.ImportPhoneNumbersFromFile(this, errorStatus);
             String  importSmsReport        = SMSUtil.ImportSMSFromFile(this, errorStatus);
 
-            UIUtil.showOKResult(this, ""+ importNumberReport + "\n" + importSmsReport);
+            UIUtil.showOKResult(this, ""+ importNumberReport + "\n" +"--------------------------------------------------------------"+ "\n" + importSmsReport);
 
         } catch (Exception e) {
             e.printStackTrace();
